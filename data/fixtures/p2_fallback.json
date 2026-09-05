@@ -1,0 +1,307 @@
+{
+  "paper": "P2 Deterministic fallback engines and reproducible inference",
+  "results": [
+    {
+      "experiment": "E2.1_yield_accuracy_vs_failure",
+      "rows": [
+        {
+          "pair": "objects",
+          "injected_fail_rate": 0.05,
+          "n": 10000,
+          "two_tier_yield": 1.0,
+          "two_tier_accuracy": 0.6353,
+          "secondary_share": 0.0691,
+          "primary_only_yield": 0.9309,
+          "primary_only_accuracy_over_all": 0.6073,
+          "retry_yield": 0.9998,
+          "retry_accuracy_over_all": 0.6496
+        },
+        {
+          "pair": "objects",
+          "injected_fail_rate": 0.1,
+          "n": 10000,
+          "two_tier_yield": 1.0,
+          "two_tier_accuracy": 0.6354,
+          "secondary_share": 0.1081,
+          "primary_only_yield": 0.8919,
+          "primary_only_accuracy_over_all": 0.5892,
+          "retry_yield": 0.9984,
+          "retry_accuracy_over_all": 0.6508
+        },
+        {
+          "pair": "objects",
+          "injected_fail_rate": 0.2,
+          "n": 10000,
+          "two_tier_yield": 1.0,
+          "two_tier_accuracy": 0.6274,
+          "secondary_share": 0.1977,
+          "primary_only_yield": 0.8023,
+          "primary_only_accuracy_over_all": 0.5349,
+          "retry_yield": 0.9898,
+          "retry_accuracy_over_all": 0.645
+        },
+        {
+          "pair": "objects",
+          "injected_fail_rate": 0.35,
+          "n": 10000,
+          "two_tier_yield": 1.0,
+          "two_tier_accuracy": 0.5897,
+          "secondary_share": 0.3218,
+          "primary_only_yield": 0.6782,
+          "primary_only_accuracy_over_all": 0.4491,
+          "retry_yield": 0.9633,
+          "retry_accuracy_over_all": 0.6214
+        },
+        {
+          "pair": "objects",
+          "injected_fail_rate": 0.5,
+          "n": 10000,
+          "two_tier_yield": 1.0,
+          "two_tier_accuracy": 0.5698,
+          "secondary_share": 0.447,
+          "primary_only_yield": 0.553,
+          "primary_only_accuracy_over_all": 0.3715,
+          "retry_yield": 0.9028,
+          "retry_accuracy_over_all": 0.5934
+        },
+        {
+          "pair": "faces",
+          "injected_fail_rate": 0.05,
+          "n": 10000,
+          "two_tier_yield": 1.0,
+          "two_tier_accuracy": 0.6094,
+          "secondary_share": 0.0648,
+          "primary_only_yield": 0.9352,
+          "primary_only_accuracy_over_all": 0.5876,
+          "retry_yield": 0.9997,
+          "retry_accuracy_over_all": 0.6165
+        },
+        {
+          "pair": "faces",
+          "injected_fail_rate": 0.1,
+          "n": 10000,
+          "two_tier_yield": 1.0,
+          "two_tier_accuracy": 0.594,
+          "secondary_share": 0.1133,
+          "primary_only_yield": 0.8867,
+          "primary_only_accuracy_over_all": 0.5552,
+          "retry_yield": 0.9975,
+          "retry_accuracy_over_all": 0.6138
+        },
+        {
+          "pair": "faces",
+          "injected_fail_rate": 0.2,
+          "n": 10000,
+          "two_tier_yield": 1.0,
+          "two_tier_accuracy": 0.5832,
+          "secondary_share": 0.1958,
+          "primary_only_yield": 0.8042,
+          "primary_only_accuracy_over_all": 0.5106,
+          "retry_yield": 0.9908,
+          "retry_accuracy_over_all": 0.6237
+        },
+        {
+          "pair": "faces",
+          "injected_fail_rate": 0.35,
+          "n": 10000,
+          "two_tier_yield": 1.0,
+          "two_tier_accuracy": 0.5526,
+          "secondary_share": 0.3191,
+          "primary_only_yield": 0.6809,
+          "primary_only_accuracy_over_all": 0.4369,
+          "retry_yield": 0.9605,
+          "retry_accuracy_over_all": 0.6012
+        },
+        {
+          "pair": "faces",
+          "injected_fail_rate": 0.5,
+          "n": 10000,
+          "two_tier_yield": 1.0,
+          "two_tier_accuracy": 0.5248,
+          "secondary_share": 0.4451,
+          "primary_only_yield": 0.5549,
+          "primary_only_accuracy_over_all": 0.3637,
+          "retry_yield": 0.9012,
+          "retry_accuracy_over_all": 0.5695
+        },
+        {
+          "pair": "anpr",
+          "injected_fail_rate": 0.05,
+          "n": 10000,
+          "two_tier_yield": 1.0,
+          "two_tier_accuracy": 0.6048,
+          "secondary_share": 0.0618,
+          "primary_only_yield": 0.9382,
+          "primary_only_accuracy_over_all": 0.5788,
+          "retry_yield": 0.9998,
+          "retry_accuracy_over_all": 0.6077
+        },
+        {
+          "pair": "anpr",
+          "injected_fail_rate": 0.1,
+          "n": 10000,
+          "two_tier_yield": 1.0,
+          "two_tier_accuracy": 0.594,
+          "secondary_share": 0.106,
+          "primary_only_yield": 0.894,
+          "primary_only_accuracy_over_all": 0.5488,
+          "retry_yield": 0.9983,
+          "retry_accuracy_over_all": 0.604
+        },
+        {
+          "pair": "anpr",
+          "injected_fail_rate": 0.2,
+          "n": 10000,
+          "two_tier_yield": 1.0,
+          "two_tier_accuracy": 0.5817,
+          "secondary_share": 0.1917,
+          "primary_only_yield": 0.8083,
+          "primary_only_accuracy_over_all": 0.4967,
+          "retry_yield": 0.9932,
+          "retry_accuracy_over_all": 0.6072
+        },
+        {
+          "pair": "anpr",
+          "injected_fail_rate": 0.35,
+          "n": 10000,
+          "two_tier_yield": 1.0,
+          "two_tier_accuracy": 0.5533,
+          "secondary_share": 0.3168,
+          "primary_only_yield": 0.6832,
+          "primary_only_accuracy_over_all": 0.4162,
+          "retry_yield": 0.9599,
+          "retry_accuracy_over_all": 0.5819
+        },
+        {
+          "pair": "anpr",
+          "injected_fail_rate": 0.5,
+          "n": 10000,
+          "two_tier_yield": 1.0,
+          "two_tier_accuracy": 0.5383,
+          "secondary_share": 0.4476,
+          "primary_only_yield": 0.5524,
+          "primary_only_accuracy_over_all": 0.3497,
+          "retry_yield": 0.8984,
+          "retry_accuracy_over_all": 0.5499
+        }
+      ]
+    },
+    {
+      "experiment": "E2.2_secondary_determinism",
+      "rows": [
+        {
+          "pair": "objects",
+          "secondary_runs_identical": true,
+          "mismatches": 0,
+          "n": 5000
+        },
+        {
+          "pair": "faces",
+          "secondary_runs_identical": true,
+          "mismatches": 0,
+          "n": 5000
+        },
+        {
+          "pair": "anpr",
+          "secondary_runs_identical": true,
+          "mismatches": 0,
+          "n": 5000
+        }
+      ]
+    },
+    {
+      "experiment": "E2.3_label_free_accuracy_estimation",
+      "rows": [
+        {
+          "pair": "objects",
+          "true_accuracy": 0.635235294117647,
+          "n_calibration": 3000,
+          "n_production": 17000,
+          "provenance_stratified_estimate": 0.6406168950415987,
+          "provenance_stratified_abs_error": 0.005381600923951679,
+          "confidence_only_estimate": 0.6247217255182675,
+          "confidence_only_abs_error": 0.010513568599379464,
+          "global_prior_estimate": 0.6413333333333333,
+          "global_prior_abs_error": 0.006098039215686302,
+          "provenance_ece": 0.015448365678073747,
+          "true_accuracy_ci95": [
+            0.6287029411764706,
+            0.6432382352941176
+          ],
+          "true_accuracy_primary": 0.660468183316848,
+          "estimate_primary": 0.6612690767583589,
+          "true_accuracy_secondary": 0.42670299727520433,
+          "estimate_secondary": 0.4699409627611263
+        },
+        {
+          "pair": "faces",
+          "true_accuracy": 0.5948823529411764,
+          "n_calibration": 3000,
+          "n_production": 17000,
+          "provenance_stratified_estimate": 0.5832743749462774,
+          "provenance_stratified_abs_error": 0.011607977994898988,
+          "confidence_only_estimate": 0.5808472892200518,
+          "confidence_only_abs_error": 0.014035063721124619,
+          "global_prior_estimate": 0.5863333333333334,
+          "global_prior_abs_error": 0.008549019607843045,
+          "provenance_ece": 0.012710246353222661,
+          "true_accuracy_ci95": [
+            0.5876161764705883,
+            0.6028823529411764
+          ],
+          "true_accuracy_primary": 0.6327579120427456,
+          "estimate_primary": 0.6207127776568386,
+          "true_accuracy_secondary": 0.3646960865945046,
+          "estimate_secondary": 0.3557448983564475
+        },
+        {
+          "pair": "anpr",
+          "true_accuracy": 0.5794117647058824,
+          "n_calibration": 3000,
+          "n_production": 17000,
+          "provenance_stratified_estimate": 0.5835047835769911,
+          "provenance_stratified_abs_error": 0.004093018871108689,
+          "confidence_only_estimate": 0.567600857223981,
+          "confidence_only_abs_error": 0.01181090748190139,
+          "global_prior_estimate": 0.58,
+          "global_prior_abs_error": 0.0005882352941175562,
+          "provenance_ece": 0.016710884652766794,
+          "true_accuracy_ci95": [
+            0.5725294117647058,
+            0.5871514705882352
+          ],
+          "true_accuracy_primary": 0.6155102620552517,
+          "estimate_primary": 0.6247757499321683,
+          "true_accuracy_secondary": 0.4052757793764988,
+          "estimate_secondary": 0.38441726139567867
+        }
+      ]
+    },
+    {
+      "experiment": "E2.4_latency_of_fallback",
+      "rows": [
+        {
+          "pair": "objects",
+          "mean_latency_ms": 41.67152715271528,
+          "p99_latency_ms": 47.2,
+          "secondary_share": 0.10831083108310831,
+          "accuracy": 0.6281128112811281
+        },
+        {
+          "pair": "faces",
+          "mean_latency_ms": 55.4459795979598,
+          "p99_latency_ms": 58.1,
+          "secondary_share": 0.14386438643864385,
+          "accuracy": 0.5921092109210921
+        },
+        {
+          "pair": "anpr",
+          "mean_latency_ms": 81.75577557755776,
+          "p99_latency_ms": 100.0,
+          "secondary_share": 0.1707170717071707,
+          "accuracy": 0.5829582958295829
+        }
+      ]
+    }
+  ]
+}

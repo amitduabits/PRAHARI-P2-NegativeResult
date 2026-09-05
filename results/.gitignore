@@ -1,0 +1,6 @@
+*.jsonl
+*.json
+*.csv
+!.gitkeep
+!real/.gitkeep
+!synthetic/.gitkeep

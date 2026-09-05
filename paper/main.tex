@@ -1,0 +1,22 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs,hyperref,graphicx,amsmath}
+\title{What Provenance Buys: A Negative Result on Label-Free Accuracy Estimation}
+\author{Amit Dua\\Yushu Excellence Technologies Pvt.\ Ltd.}
+\date{2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+Average Confidence wins on batch accuracy; provenance stratification only buys per-path estimates.
+\end{abstract}
+\section{Status}
+Tier C. Target venue: Workshop (not ICCV).
+This repository is the paper package. Synthetic experiments live in \texttt{code/prresearch}.
+Headline numbers, if any, must be labelled MEASURED or DESIGN TARGET.
+\section{Reproduction}
+\begin{verbatim}
+cd code
+pip install -r requirements.txt
+python -m pytest -q
+\end{verbatim}
+\end{document}
