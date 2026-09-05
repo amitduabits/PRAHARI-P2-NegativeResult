@@ -16,3 +16,8 @@ results/real/*.json
 !results/real/.gitkeep
 !results/synthetic/.gitkeep
 data/*.jsonl
+*.fdb_latexmk
+*.fls
+*.toc
+*.tmp
+*.pk

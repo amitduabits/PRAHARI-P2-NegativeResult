@@ -1,22 +1,372 @@
 \documentclass[11pt,a4paper]{article}
 \usepackage[margin=1in]{geometry}
-\usepackage{booktabs,hyperref,graphicx,amsmath}
-\title{What Provenance Buys: A Negative Result on Label-Free Accuracy Estimation}
-\author{Amit Dua\\Yushu Excellence Technologies Pvt.\ Ltd.}
+\usepackage{booktabs,hyperref,graphicx,amsmath,amssymb}
+\usepackage[numbers]{natbib}
+\usepackage{xcolor}
+
+\newcommand{\measured}{\textsc{synthetic}}
+
+\title{What Provenance Buys:\\A Negative Result on Label-Free Accuracy Estimation\\in Two-Tier Video Analytics}
+\author{Amit Dua\\Yushu Excellence Technologies Pvt.\ Ltd.\\\texttt{mail.amitduabits@gmail.com}}
 \date{2026}
+
 \begin{document}
 \maketitle
+
 \begin{abstract}
-Average Confidence wins on batch accuracy; provenance stratification only buys per-path estimates.
+A deployed video-analytics pipeline that falls back from a learned engine to a
+classical one produces a mixed-provenance output stream. The operator's question
+is then unavoidable: how accurate is today's output, given no labels? We record
+the inference path of every record and ask whether stratifying a label-free
+accuracy estimator by that path beats an unstratified baseline. \textbf{It does
+not.} Across three engine pairs, provenance stratification and a global
+calibration prior are indistinguishable on whole-batch accuracy (absolute error
+$0.0041$--$0.0116$ against $0.0006$--$0.0085$ for the prior); the prior is
+\emph{better} on two of three pairs. This is the expected outcome, not a bug:
+average confidence is provably unbiased under calibration, and our production and
+calibration distributions match by construction, so there is no slice shift for
+stratification to exploit.
+
+What provenance does buy is the quantity an operator actually acts on, which no
+unstratified estimator can express at all: accuracy conditioned on inference path.
+We recover a primary-path accuracy of $0.6605$ as $0.6613$ and a secondary-path
+accuracy of $0.4267$ as $0.4699$ on the object pair, and the analogous split on
+the other two. We also report a systems result that survives independently of the
+estimation question: the two-tier pipeline holds yield at $1.0$ up to an injected
+primary-failure rate of $0.5$, where a primary-only pipeline falls to $0.553$, and
+the classical secondary is bit-for-bit reproducible across processes ($0$
+mismatches in $5{,}000$ records per pair). We argue the honest claim is the
+per-path estimate and the bounded-latency determinism, not a new estimator, and we
+name the baseline that beat us.
+
+All numbers in this paper are produced by behavioural engine models on synthetic
+traces with fixed seeds. They are labelled \measured{} throughout and none of them
+is a measurement of a production YOLO, FaceNet or PaddleOCR stack.
 \end{abstract}
-\section{Status}
-Tier C. Target venue: Workshop (not ICCV).
-This repository is the paper package. Synthetic experiments live in \texttt{code/prresearch}.
-Headline numbers, if any, must be labelled MEASURED or DESIGN TARGET.
-\section{Reproduction}
+
+\section{Introduction}
+
+Video-analytics platforms in the field do not run one model per task. They run a
+learned primary engine and, when it times out, crashes, or fails a health probe,
+a classical secondary: a Haar cascade behind a CNN face matcher, a template
+matcher behind a learned plate reader, a background-subtraction blob detector
+behind an object detector. The pipeline is designed so that a frame is never
+silently dropped. The consequence is a mixed output stream in which some records
+came from a strong model and some from a weak one, and the mix changes minute to
+minute with the health of the primary.
+
+An operator staffing a control room asks a simple question about that stream:
+\emph{how much of what I am looking at right now is right?} There are no labels.
+The obvious answer is to average the model's confidence over the batch. The
+tempting answer, once the pipeline already records which engine produced each
+record, is to stratify: estimate accuracy per inference path from a labelled
+calibration set, then reweight by today's observed path mix.
+
+This paper reports that the tempting answer does not beat the obvious one, states
+why it cannot under the conditions we and most deployments operate in, and
+identifies the narrower claim that does survive.
+
+\subsection{The negative result, stated plainly}
+
+Let $\hat{a}_{\text{prior}}$ be the global calibration prior: the accuracy measured
+on a held-out labelled set, applied unchanged to production. Let
+$\hat{a}_{\text{prov}}$ be the provenance-stratified estimator: per-path accuracies
+from the same calibration set, reweighted by the production path mix. On three
+engine pairs with $3{,}000$ calibration and $17{,}000$ production records each,
+the absolute errors are $0.0041$, $0.0116$ and $0.0054$ for $\hat{a}_{\text{prov}}$
+against $0.0006$, $0.0085$ and $0.0061$ for $\hat{a}_{\text{prior}}$. The prior
+wins on two of three, and the differences are inside the $95\%$ interval on the
+true accuracy itself. Confidence-only estimation is worse than both
+($0.0105$--$0.0140$) because our engines are imperfectly calibrated
+(ECE $0.0127$--$0.0167$), which is a property of the engine models, not a defence
+of stratification.
+
+\citet{kivimaki2025confidence} give the reason. Average confidence is an unbiased
+estimator of accuracy whenever the scores are calibrated, with no distributional
+assumption beyond that. Stratification helps only when the calibration and
+production distributions differ \emph{within} the strata used --- the slice-shift
+setting \citet{chen2021mandoline} were built for. Our production stream is drawn
+from the same generator as our calibration set. There is no shift. There is
+therefore nothing for provenance to correct, and it would be surprising if it won.
+
+\subsection{Contributions}
+
+\begin{enumerate}
+\item A negative result: provenance stratification does not improve whole-batch
+label-free accuracy estimation in a matched-distribution two-tier pipeline, with
+the theoretical reason for why not (\S\ref{sec:why}).
+\item The narrower positive claim that does hold: per-path accuracy is recoverable
+from the same machinery and is not expressible by any unstratified estimator
+(\S\ref{sec:buys}), together with an honest report of where that recovery is loose
+(secondary-path error up to $0.043$).
+\item A systems result independent of the estimation question: the two-tier
+pipeline trades accuracy for bounded latency and cross-process determinism, and
+loses to a retry baseline on raw accuracy (\S\ref{sec:systems}). We report the
+loss rather than omit the baseline.
+\end{enumerate}
+
+\section{Setting}
+
+\subsection{The deployed two-tier pipeline}
+
+Each analytic task is a pair $(\text{primary}, \text{secondary})$. We study three:
+object detection, face matching, and automatic number-plate recognition. The
+dispatcher calls the primary under a deadline. On timeout, exception, or a failed
+health probe it calls the secondary and marks the record. The secondary is always
+called; there is no drop path.
+
+\subsection{The record}
+
+Every emitted record carries nine fields, of which four matter here: the entity
+key, the engine confidence, the \texttt{source} field naming the engine that
+produced it, and the \texttt{path} field taking the value \texttt{primary} or
+\texttt{secondary}. Provenance is therefore free at estimation time --- it is
+already written for audit reasons --- which is exactly why the stratified estimator
+is worth testing and exactly why a negative result is worth publishing rather
+than quietly dropping.
+
+\subsection{Threat to validity we accept up front}
+
+The engines here are behavioural models parameterised by a difficulty scale, not
+the real stacks. The determinism result transfers to any pipeline whose secondary
+is a fixed-function classical algorithm. The accuracy numbers do not transfer and
+should not be read as characterising YOLO, FaceNet or PaddleOCR.
+
+\section{Why the obvious estimator wins}
+\label{sec:why}
+
+Write $Y \in \{0,1\}$ for record correctness, $S$ for the model score, and
+$P \in \{\text{primary}, \text{secondary}\}$ for the path. Calibration means
+$\mathbb{E}[Y \mid S = s] = s$. Then
+\[
+\mathbb{E}[\bar{S}] \;=\; \mathbb{E}\big[\mathbb{E}[Y \mid S]\big] \;=\; \Pr(Y=1),
+\]
+so average confidence is unbiased for batch accuracy without reference to $P$ at
+all \citep{kivimaki2025confidence}. Conditioning on $P$ can reduce variance, but
+the variance of a mean over $17{,}000$ records is already far below the bias we
+are trying to detect: the $95\%$ interval on true accuracy is
+$[0.6287, 0.6432]$ for the object pair, a width of $0.0145$, which is wider than
+every estimator gap we measure.
+
+Stratification pays only under shift. Let $w_p$ be the calibration path share and
+$w'_p$ the production share. The prior errs by
+$\sum_p (w'_p - w_p)\,a_p$ where $a_p$ is per-path accuracy; the stratified
+estimator cancels exactly this term. Our generator holds $w'_p \approx w_p$, so
+the term it cancels is near zero and the estimator inherits only the extra
+estimation noise of two smaller calibration strata. That is the mechanism behind
+Table~\ref{tab:estimation}, and it is a property of the deployment, not of the
+idea. A deployment whose primary degrades diurnally --- night-time face failures,
+monsoon plate failures --- has real $w'_p \neq w_p$ and should expect the opposite
+result. We could not manufacture that shift honestly without also manufacturing
+the accuracy conclusion, so we report the matched case and say so.
+
+\section{What stratification does buy}
+\label{sec:buys}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Pair} & \textbf{True} & \textbf{Prov.\ strat.} & \textbf{Global prior} & \textbf{Conf.\ only} \\
+\midrule
+objects & 0.6352 & 0.6406 \;(0.0054) & \textbf{0.6413 \;(0.0061)} & 0.6247 \;(0.0105) \\
+faces   & 0.5949 & 0.5833 \;(0.0116) & \textbf{0.5863 \;(0.0085)} & 0.5808 \;(0.0140) \\
+anpr    & 0.5794 & \textbf{0.5835 \;(0.0041)} & 0.5800 \;(0.0006) & 0.5676 \;(0.0118) \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Whole-batch accuracy estimation (\measured).} Absolute error in
+parentheses. $n_{\text{cal}}=3{,}000$, $n_{\text{prod}}=17{,}000$. The global prior
+is better than provenance stratification on two of three pairs and never worse by
+more than $0.003$. \textbf{This table is the negative result.}}
+\label{tab:estimation}
+\end{table}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lrrrrr}
+\toprule
+& \multicolumn{2}{c}{\textbf{Primary path}} & \multicolumn{2}{c}{\textbf{Secondary path}} & \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+\textbf{Pair} & True & Estimate & True & Estimate & \textbf{ECE} \\
+\midrule
+objects & 0.6605 & 0.6613 & 0.4267 & 0.4699 & 0.0154 \\
+faces   & 0.6328 & 0.6207 & 0.3647 & 0.3557 & 0.0127 \\
+anpr    & 0.6155 & 0.6248 & 0.4053 & 0.3844 & 0.0167 \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Per-path accuracy (\measured).} The gap between paths is
+$0.21$--$0.27$ and is recovered to within $0.001$--$0.043$. No unstratified
+estimator produces these columns at all. The secondary-path estimate on the object
+pair is the loosest ($0.043$); we do not claim uniform tightness.}
+\label{tab:perpath}
+\end{table}
+
+Table~\ref{tab:perpath} is the case for keeping provenance. The operational
+question is rarely ``what is batch accuracy'' and usually ``is the degraded path
+carrying enough of tonight's output that I should stop acting on it''. The paths
+differ by $0.21$ to $0.27$ in accuracy. An unstratified estimator reports a single
+number that is a weighted average of two very different populations and is
+therefore correct about a quantity nobody needs.
+
+We report the loose case rather than the mean of the four: the object-pair
+secondary estimate is off by $0.043$, roughly $10\%$ relative. The secondary
+stratum is the smaller one, and its calibration sample is correspondingly thin.
+A deployment that wants tight per-path numbers must size the calibration set per
+stratum, not per batch. That is a design consequence, and it is the useful
+sentence in this section.
+
+\section{The systems result, and the baseline that beats it}
+\label{sec:systems}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{rrrrrr}
+\toprule
+\textbf{Fail rate} & \textbf{Two-tier yield} & \textbf{Two-tier acc.} & \textbf{Primary-only yield} & \textbf{Primary-only acc.} & \textbf{Retry acc.} \\
+\midrule
+0.05 & 1.000 & 0.6353 & 0.9309 & 0.6073 & \textbf{0.6496} \\
+0.10 & 1.000 & 0.6354 & 0.8919 & 0.5892 & \textbf{0.6508} \\
+0.20 & 1.000 & 0.6274 & 0.8023 & 0.5349 & \textbf{0.6450} \\
+0.35 & 1.000 & 0.5897 & 0.6782 & 0.4491 & \textbf{0.6214} \\
+0.50 & 1.000 & 0.5698 & 0.5530 & 0.3715 & \textbf{0.5934} \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Yield and accuracy against injected primary-failure rate,
+object pair (\measured, $n=10{,}000$ per row).} Two-tier never drops a frame.
+It also never beats retry on accuracy-over-all. Both facts belong in the paper.}
+\label{tab:yield}
+\end{table}
+
+Three things are true at once in Table~\ref{tab:yield}, and papers in this area
+usually report only the first.
+
+\textbf{Yield.} The two-tier pipeline emits a record for every frame at every
+injected failure rate up to $0.5$. A primary-only pipeline degrades linearly to
+$0.553$. If the downstream consumer is a tracker that needs an observation per
+frame, this difference is the whole system.
+
+\textbf{Determinism.} The classical secondary produced identical output across
+independent processes on all three pairs: $0$ mismatches in $5{,}000$ records
+each. This is not automatic. Our first implementation keyed off Python's builtin
+\texttt{hash()}, which is salted per process, so two runs of the same script
+disagreed while the unit tests passed. Stable hashing (\texttt{zlib.crc32}) fixed
+it. Anything that must reproduce across processes cannot hash strings with
+\texttt{hash()}; we record the trap because it is the kind of defect that survives
+a green test suite.
+
+\textbf{The loss.} Retrying the primary beats the two-tier pipeline on
+accuracy-over-all at every failure rate we tested, by $0.014$ to $0.032$. This is
+not surprising --- a successful retry returns a primary-quality record where the
+fallback returns a secondary-quality one --- but it is decisive for how the
+contribution should be phrased. The fallback is defensible where a repeated call
+is \emph{not} free and the failure is \emph{not} transient: where the primary is
+down rather than flaky, where the deadline is hard, or where the retry would cost
+a GPU slot that another camera needs. Its wins are bounded latency
+(Table~\ref{tab:latency}) and reproducibility, not accuracy. A paper that omits
+the retry column is making a claim its own data does not support.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Pair} & \textbf{Mean (ms)} & \textbf{p99 (ms)} & \textbf{Secondary share} & \textbf{Accuracy} \\
+\midrule
+objects & 41.7 & 47.2 & 0.108 & 0.6281 \\
+faces   & 55.4 & 58.1 & 0.144 & 0.5921 \\
+anpr    & 81.8 & 100.0 & 0.171 & 0.5830 \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Latency of the fallback path (\measured).} The p99 is bounded by
+construction: a fallback is one extra call with a known cost, whereas a retry
+schedule has an unbounded tail.}
+\label{tab:latency}
+\end{table}
+
+\section{Baselines}
+
+We compare against average confidence \citep{kivimaki2025confidence}, the global
+calibration prior, difference-of-confidences \citep{guillory2021doc}, and the
+average threshold confidence family \citep{garg2022atc}, both global and
+per-stratum. Slice-based estimation \citep{chen2021mandoline} is the closest
+prior work and is the correct comparison for the stratified estimator: it
+formalises exactly the reweighting we perform, with provenance as the slicing
+function. Our result is that under matched distributions this reduces to the
+prior, which is consistent with what \citet{chen2021mandoline} claim rather than
+in tension with it.
+
+Per-stratum ATC ties with provenance stratification on the per-path metric to
+within $0.01$ on all three pairs, which we state here rather than in an appendix.
+The honest reading is that \emph{recording the path} is what buys the per-path
+number; the particular estimator layered on top of it is not the contribution.
+
+\section{Related work}
+
+The two-tier architecture is anticipated. NoScope \citep{kang2017noscope} cascades
+a cheap specialised model in front of an expensive one with a difference detector
+and a learned threshold. Neural Simplex \citep{phan2020neuralsimplex} switches
+from a learned controller to a verified fallback under a safety monitor.
+BranchyNet \citep{teerapittayanon2016branchynet} exits early on confident samples.
+IDK cascades \citep{wang2018idk} formalise the abstain-and-defer step, and the
+selective-prediction line \citep{chow1970optimum, geifman2017selective} gives its
+decision theory. FrugalGPT \citep{chen2023frugalgpt} is the same pattern under a
+budget. We add nothing architectural to this literature and say so.
+
+Label-free accuracy estimation is likewise a developed field: ATC
+\citep{garg2022atc}, agreement-based estimation \citep{baek2022agreement},
+AutoEval \citep{deng2021autoeval}, DoC \citep{guillory2021doc}, projection norm
+\citep{yu2022projnorm}, confidence optimal transport \citep{lu2023cot}, and the
+older estimation-without-labels line \citep{platanios2014estimating}. Calibration
+quality is the binding constraint on all of them \citep{guo2017calibration,
+ovadia2019trust}, which is why our confidence-only column is the weakest.
+
+Where we sit is therefore narrow: we test a specific combination
+(provenance-as-slice on a two-tier video pipeline) that the literature makes
+plausible, find it does not pay under matched distributions, and report the
+conditions under which it would.
+
+\section{Limitations}
+
+\begin{enumerate}
+\item The engines are behavioural models with a difficulty parameter. Accuracy
+figures characterise the generator.
+\item Failure is injected at a fixed rate, independently per frame. Real primary
+failures are bursty and correlated with the conditions that also make frames
+hard, which would create the very shift that would make stratification win.
+\item The determinism claim is about the secondary engine's output given a frame.
+It is not a claim that the two-tier system as a whole is deterministic; which path
+a frame takes depends on wall-clock timeouts.
+\item Single estate, single generator, three pairs. Nothing here is validated
+against operational footage.
+\end{enumerate}
+
+\section{Conclusion}
+
+Recording the inference path of every record is cheap, is already required for
+audit, and does not improve label-free estimation of whole-batch accuracy. Under
+calibration and matched distributions the unstratified prior is unbiased and the
+stratified estimator has nothing left to correct; our measurements agree with the
+theory to within the confidence interval on the target quantity. What the path
+field does buy is the per-path accuracy split, which no unstratified estimator can
+produce and which is the number an operator acts on. Separately, the two-tier
+pipeline buys yield and cross-process determinism at a measured cost in
+accuracy-over-all relative to retry. We recommend that deployments record
+provenance, report accuracy per path, and stop expecting the batch number to
+improve.
+
+\section*{Reproduction}
+
 \begin{verbatim}
 cd code
 pip install -r requirements.txt
 python -m pytest -q
+python -m prresearch.p2_fallback.experiment
 \end{verbatim}
+
+Fixed seeds; \texttt{results/p2\_fallback.json} is byte-identical across runs and
+across processes. Code and data:
+\url{https://github.com/amitduabits/PRAHARI-P2-NegativeResult}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
 \end{document}
