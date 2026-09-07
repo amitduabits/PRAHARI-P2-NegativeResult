@@ -172,11 +172,58 @@ def e2_4_latency(n: int = 20000) -> dict:
     return {"experiment": "E2.4_latency_of_fallback", "rows": rows}
 
 
+def e2_5_operating_regime(yield_block: dict) -> dict:
+    """E2.5  When does the two-tier pipeline beat retry?
+
+    Retry wins on accuracy over all frames but does not always return a record.
+    Score a returned-correct record as 1, a returned-wrong record as 0 and a
+    missing record as -m, where m is how many correct records one gap is worth
+    to the consumer.  Utility is then
+
+        U_two_tier = a2                       (yield is 1 by construction)
+        U_retry    = ar - m * (1 - yr)
+
+    so the two are equal at the break-even gap cost
+
+        m* = (ar - a2) / (1 - yr).
+
+    Retry wins below m*, the two-tier pipeline wins above it.  m* is the
+    number the paper reports: it turns "which is better" into "how much does a
+    missing record cost you", which is a question a deployment can answer.
+    """
+    rows = []
+    for r in yield_block["rows"]:
+        a2 = r["two_tier_accuracy"]
+        ar = r["retry_accuracy_over_all"]
+        yr = r["retry_yield"]
+        gap = 1.0 - yr
+        rows.append(
+            {
+                "pair": r["pair"],
+                "injected_fail_rate": r["injected_fail_rate"],
+                "two_tier_accuracy": a2,
+                "retry_accuracy_over_all": ar,
+                "retry_yield": yr,
+                "retry_accuracy_given_returned": (ar / yr) if yr else 0.0,
+                "accuracy_gap_to_retry": ar - a2,
+                "break_even_gap_cost": ((ar - a2) / gap) if gap > 0 else None,
+            }
+        )
+    return {"experiment": "E2.5_operating_regime", "rows": rows}
+
+
 def main() -> None:
     RESULTS.mkdir(parents=True, exist_ok=True)
+    yield_block = e2_1_yield()
     out = {
         "paper": "P2 Deterministic fallback engines and reproducible inference",
-        "results": [e2_1_yield(), e2_2_determinism(), e2_3_label_free(), e2_4_latency()],
+        "results": [
+            yield_block,
+            e2_2_determinism(),
+            e2_3_label_free(),
+            e2_4_latency(),
+            e2_5_operating_regime(yield_block),
+        ],
     }
     path = RESULTS / "p2_fallback.json"
     path.write_text(json.dumps(out, indent=2))

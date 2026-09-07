@@ -131,6 +131,7 @@ def generate_trips(
     n_vehicles: int,
     steps: tuple[int, int] = (4, 14),
     seed_name: str = "trips",
+    corridor_bias: float = 0.62,
 ) -> list[list[tuple[str, float]]]:
     """Random walks over the true adjacency, biased so a few corridors dominate.
 
@@ -154,7 +155,7 @@ def generate_trips(
             nbrs = estate.adjacency.get(cur) or []
             if not nbrs:
                 break
-            if g.random() < 0.62:
+            if g.random() < corridor_bias:
                 nxt = preferred[cur]
             else:
                 nxt = nbrs[int(g.integers(0, len(nbrs)))]

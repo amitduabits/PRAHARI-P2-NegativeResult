@@ -21,3 +21,5 @@ data/*.jsonl
 *.toc
 *.tmp
 *.pk
+.git-rewrite/
+code/results/

@@ -1,12 +1,17 @@
+%% SUBMISSION NOTE. This source builds the named (non-anonymous) version,
+%% suitable for arXiv and for a camera-ready. For a double-blind submission
+%% replace the \author block with a placeholder,
+%% and re-check that no self-citation, repository URL or acknowledgement in
+%% the Reproduction section identifies the authors.
 \documentclass[11pt,a4paper]{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{booktabs,hyperref,graphicx,amsmath,amssymb}
 \usepackage[numbers]{natbib}
 \usepackage{xcolor}
 
-\newcommand{\measured}{\textsc{synthetic}}
+\newcommand{\synth}{\textsc{synthetic}}
 
-\title{What Provenance Buys:\\A Negative Result on Label-Free Accuracy Estimation\\in Two-Tier Video Analytics}
+\title{When Does the Simple Baseline Win?\\Operating Regimes for Fallback and Estimation\\in Two-Tier Video Analytics}
 \author{Amit Dua\\Yushu Excellence Technologies Pvt.\ Ltd.\\\texttt{mail.amitduabits@gmail.com}}
 \date{2026}
 
@@ -14,12 +19,27 @@
 \maketitle
 
 \begin{abstract}
-A deployed video-analytics pipeline that falls back from a learned engine to a
-classical one produces a mixed-provenance output stream. The operator's question
-is then unavoidable: how accurate is today's output, given no labels? We record
-the inference path of every record and ask whether stratifying a label-free
-accuracy estimator by that path beats an unstratified baseline. \textbf{It does
-not.} Across three engine pairs, provenance stratification and a global
+Two design decisions in a deployed video-analytics pipeline look like places to
+add machinery, and in our deployment neither of them was. When the learned engine
+fails, should the pipeline fall back to a classical secondary or simply try the
+learned engine again? And once the output stream carries records from both paths,
+does stratifying a label-free accuracy estimator by that path beat an unstratified
+baseline? This paper answers both as \emph{it depends, and here is the number the
+decision turns on} rather than as a proposal, and in both cases the simple option
+wins across most of the operating range.
+
+\textbf{Fallback.} Retrying beats the two-tier pipeline on accuracy over all
+frames at every injected failure rate we tested, by $0.003$ to $0.049$ --- but it
+returns nothing at all on $0.02\%$ to $9.7\%$ of frames, where the two-tier
+pipeline always returns something. Scoring a gap as $m$ correct records
+converts this into a single break-even quantity, $m^\star = (a_r - a_2)/(1 - y_r)$.
+Measured, $m^\star$ falls from $14.5$--$71.5$ at a $5\%$ failure rate to
+$0.11$--$0.45$ at $50\%$. The rule that follows is sharp: retry unless a gap in
+the stream costs you more than $m^\star$ correct records, and note that $m^\star$
+drops below $1$ once the primary is failing more than about a third of the time.
+
+\textbf{Estimation.} Provenance stratification does not beat an unstratified
+prior at estimating whole-batch accuracy. \textbf{It does not.} Across three engine pairs, provenance stratification and a global
 calibration prior are indistinguishable on whole-batch accuracy (absolute error
 $0.0041$--$0.0116$ against $0.0006$--$0.0085$ for the prior); the prior is
 \emph{better} on two of three pairs. This is the expected outcome, not a bug:
@@ -40,7 +60,7 @@ per-path estimate and the bounded-latency determinism, not a new estimator, and 
 name the baseline that beat us.
 
 All numbers in this paper are produced by behavioural engine models on synthetic
-traces with fixed seeds. They are labelled \measured{} throughout and none of them
+traces with fixed seeds. They are labelled \synth{} throughout and none of them
 is a measurement of a production YOLO, FaceNet or PaddleOCR stack.
 \end{abstract}
 
@@ -92,6 +112,10 @@ therefore nothing for provenance to correct, and it would be surprising if it wo
 \subsection{Contributions}
 
 \begin{enumerate}
+\item An operating-regime rule for the fallback decision, with a single
+break-even quantity a deployment can evaluate against its own cost of a missing
+record, measured across three engine pairs and five failure rates
+(\S\ref{sec:regime}).
 \item A negative result: provenance stratification does not improve whole-batch
 label-free accuracy estimation in a matched-distribution two-tier pipeline, with
 the theoretical reason for why not (\S\ref{sec:why}).
@@ -100,9 +124,10 @@ from the same machinery and is not expressible by any unstratified estimator
 (\S\ref{sec:buys}), together with an honest report of where that recovery is loose
 (secondary-path error up to $0.043$).
 \item A systems result independent of the estimation question: the two-tier
-pipeline trades accuracy for bounded latency and cross-process determinism, and
-loses to a retry baseline on raw accuracy (\S\ref{sec:systems}). We report the
-loss rather than omit the baseline.
+pipeline buys bounded latency and cross-process determinism, and pays for them in
+accuracy (\S\ref{sec:systems}). We report the loss rather than omit the baseline.
+\item Guidance for practitioners, stated as conditions rather than as a
+recommendation to adopt anything (\S\ref{sec:design}).
 \end{enumerate}
 
 \section{Setting}
@@ -174,7 +199,7 @@ faces   & 0.5949 & 0.5833 \;(0.0116) & \textbf{0.5863 \;(0.0085)} & 0.5808 \;(0.
 anpr    & 0.5794 & \textbf{0.5835 \;(0.0041)} & 0.5800 \;(0.0006) & 0.5676 \;(0.0118) \\
 \bottomrule
 \end{tabular}
-\caption{\textbf{Whole-batch accuracy estimation (\measured).} Absolute error in
+\caption{\textbf{Whole-batch accuracy estimation (\synth).} Absolute error in
 parentheses. $n_{\text{cal}}=3{,}000$, $n_{\text{prod}}=17{,}000$. The global prior
 is better than provenance stratification on two of three pairs and never worse by
 more than $0.003$. \textbf{This table is the negative result.}}
@@ -194,7 +219,7 @@ faces   & 0.6328 & 0.6207 & 0.3647 & 0.3557 & 0.0127 \\
 anpr    & 0.6155 & 0.6248 & 0.4053 & 0.3844 & 0.0167 \\
 \bottomrule
 \end{tabular}
-\caption{\textbf{Per-path accuracy (\measured).} The gap between paths is
+\caption{\textbf{Per-path accuracy (\synth).} The gap between paths is
 $0.21$--$0.27$ and is recovered to within $0.001$--$0.043$. No unstratified
 estimator produces these columns at all. The secondary-path estimate on the object
 pair is the loosest ($0.043$); we do not claim uniform tightness.}
@@ -232,7 +257,7 @@ sentence in this section.
 \bottomrule
 \end{tabular}
 \caption{\textbf{Yield and accuracy against injected primary-failure rate,
-object pair (\measured, $n=10{,}000$ per row).} Two-tier never drops a frame.
+object pair (\synth, $n=10{,}000$ per row).} Two-tier never drops a frame.
 It also never beats retry on accuracy-over-all. Both facts belong in the paper.}
 \label{tab:yield}
 \end{table}
@@ -276,11 +301,123 @@ faces   & 55.4 & 58.1 & 0.144 & 0.5921 \\
 anpr    & 81.8 & 100.0 & 0.171 & 0.5830 \\
 \bottomrule
 \end{tabular}
-\caption{\textbf{Latency of the fallback path (\measured).} The p99 is bounded by
+\caption{\textbf{Latency of the fallback path (\synth).} The p99 is bounded by
 construction: a fallback is one extra call with a known cost, whereas a retry
 schedule has an unbounded tail.}
 \label{tab:latency}
 \end{table}
+
+\section{The operating regime: when does each option win?}
+\label{sec:regime}
+
+Section~\ref{sec:systems} establishes that retry returns better records and the
+two-tier pipeline returns more of them. Stated that way the comparison is a tie,
+and a paper that stops there has told the reader nothing they can act on. This
+section turns it into one number.
+
+\subsection{A break-even for the cost of a gap}
+
+Score the consumer's view of the stream. A returned-and-correct record is worth
+$1$; a returned-and-wrong record is worth $0$; a frame for which nothing is
+returned is worth $-m$, where $m$ expresses how many correct records one gap costs
+that particular consumer. Writing $a_2$ for two-tier accuracy over all frames,
+$a_r$ and $y_r$ for retry's accuracy over all frames and its yield, and noting
+that the two-tier pipeline has yield $1$ by construction:
+\[
+  U_{\text{two-tier}} = a_2, \qquad
+  U_{\text{retry}} = a_r - m\,(1 - y_r).
+\]
+These are equal at
+\begin{equation}
+  m^\star \;=\; \frac{a_r - a_2}{1 - y_r}.
+  \label{eq:mstar}
+\end{equation}
+Retry wins when a gap costs less than $m^\star$; the two-tier pipeline wins when
+it costs more. Everything a deployment needs to supply is $m$, which is a
+statement about its own consumer and not about our engines.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lrrrrrr}
+\toprule
+\textbf{Pair} & \textbf{Fail rate} & \textbf{$a_2$} & \textbf{$a_r$} & \textbf{$y_r$} & \textbf{$a_r|$returned} & \textbf{$m^\star$} \\
+\midrule
+objects & 0.05 & 0.6353 & 0.6496 & 0.9998 & 0.6497 & 71.50 \\
+objects & 0.10 & 0.6354 & 0.6508 & 0.9984 & 0.6518 & 9.63 \\
+objects & 0.20 & 0.6274 & 0.6450 & 0.9898 & 0.6516 & 1.73 \\
+objects & 0.35 & 0.5897 & 0.6214 & 0.9633 & 0.6451 & 0.86 \\
+objects & 0.50 & 0.5698 & 0.5934 & 0.9028 & 0.6573 & \textbf{0.24} \\
+\midrule
+faces & 0.05 & 0.6094 & 0.6165 & 0.9997 & 0.6167 & 23.67 \\
+faces & 0.10 & 0.5940 & 0.6138 & 0.9975 & 0.6153 & 7.92 \\
+faces & 0.20 & 0.5832 & 0.6237 & 0.9908 & 0.6295 & 4.40 \\
+faces & 0.35 & 0.5526 & 0.6012 & 0.9605 & 0.6259 & 1.23 \\
+faces & 0.50 & 0.5248 & 0.5695 & 0.9012 & 0.6319 & \textbf{0.45} \\
+\midrule
+anpr & 0.05 & 0.6048 & 0.6077 & 0.9998 & 0.6078 & 14.50 \\
+anpr & 0.10 & 0.5940 & 0.6040 & 0.9983 & 0.6050 & 5.88 \\
+anpr & 0.20 & 0.5817 & 0.6072 & 0.9932 & 0.6114 & 3.75 \\
+anpr & 0.35 & 0.5533 & 0.5819 & 0.9599 & 0.6062 & 0.71 \\
+anpr & 0.50 & 0.5383 & 0.5499 & 0.8984 & 0.6121 & \textbf{0.11} \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{Break-even gap cost (\synth, $n=10{,}000$ per row).}
+$m^\star$ from Eq.~\ref{eq:mstar}. Retry wins below it, the two-tier pipeline
+above it. The column $a_r|$returned is retry's accuracy on the frames where it
+returned anything, and it barely moves with the failure rate --- retry's problem
+at high failure rates is not that its answers get worse, it is that it stops
+answering.}
+\label{tab:regime}
+\end{table}
+
+\subsection{Reading the table}
+
+Three things in Table~\ref{tab:regime} are worth stating plainly.
+
+\textbf{The regime boundary moves by two orders of magnitude.} At a $5\%$ primary
+failure rate $m^\star$ is $14.5$ to $71.5$: a gap would have to be worth dozens of
+correct records before the two-tier pipeline is justified, and almost no consumer
+values a gap that highly. At $50\%$, $m^\star$ is $0.11$ to $0.45$: a gap need only
+be worth a fraction of a correct record. The same two systems swap places, and the
+thing that moves them is the failure rate, not any property of the engines.
+
+\textbf{$m^\star$ crosses $1$ between failure rates of $0.2$ and $0.35$.} Below
+that band, a consumer would have to regard a gap as strictly worse than a wrong
+answer for the fallback to pay. Above it, treating a gap and a wrong answer as
+equally bad --- the natural default when the downstream consumer is a tracker that
+needs an observation per frame --- already favours the fallback. That band is the
+practical answer to the title question on our data.
+
+\textbf{Retry's conditional accuracy is flat.} Across failure rates from $0.05$ to
+$0.50$, $a_r|$returned stays within $0.6078$--$0.6573$ for objects and
+$0.6050$--$0.6121$ for ANPR. Retry does not degrade; it abstains. That is why the
+comparison cannot be settled on accuracy alone and why $m^\star$, which prices the
+abstention, is the right summary.
+
+\subsection{What the break-even does not capture}
+
+Two costs sit outside Eq.~\ref{eq:mstar} and push in the fallback's favour.
+
+The first is the latency tail. A fallback is one additional call with a known
+cost, so its p99 is bounded by construction: $47.2$, $58.1$ and $100.0$\,ms on the
+three pairs (Table~\ref{tab:latency}). A retry schedule of up to three attempts has
+a tail set by the number of attempts and the backoff, and we did not instrument it.
+Where a deadline is hard, the bounded tail can decide the question before accuracy
+is considered at all.
+
+The second is what a repeated call costs. Eq.~\ref{eq:mstar} implicitly assumes a
+retry is free. On a platform where the primary engine holds a scarce decode slot or
+a GPU session, a retry consumes capacity that another camera needs, and the true
+comparison is against the work displaced rather than against zero. We do not model
+that here; a deployment that is resource-bound should.
+
+There is also a failure mode retry cannot address at all. Our failures are injected
+independently per frame, so a retry is always a fresh draw and usually succeeds.
+When the primary is \emph{down} rather than flaky --- a crashed process, an
+unloadable model, an expired licence --- every attempt fails, retry's yield
+collapses to zero, and the fallback is the only option that returns anything. Our
+generator cannot express that case, and it is the one where the fallback's value is
+least disputable.
 
 \section{Baselines}
 
@@ -300,6 +437,7 @@ The honest reading is that \emph{recording the path} is what buys the per-path
 number; the particular estimator layered on top of it is not the contribution.
 
 \section{Related work}
+\label{sec:related}
 
 The two-tier architecture is anticipated. NoScope \citep{kang2017noscope} cascades
 a cheap specialised model in front of an expensive one with a difference detector
@@ -324,6 +462,43 @@ Where we sit is therefore narrow: we test a specific combination
 plausible, find it does not pay under matched distributions, and report the
 conditions under which it would.
 
+\section{Implications for system design}
+\label{sec:design}
+
+We state these as conditions rather than as a recommendation to adopt anything,
+because the paper's finding is that both pieces of machinery we examined are
+justified only in part of the range.
+
+\textbf{On the fallback.} Measure the primary's failure rate and price a gap
+before building a secondary. If the failure rate sits below roughly $0.2$ and a
+gap is worth less than a correct record, retry is the better system on our data
+and the secondary is unbuilt work. Build the secondary when the failure rate is
+high, when the failure is persistent rather than transient, when the deadline is
+hard enough that an unbounded retry tail is unacceptable, or when a repeated call
+consumes a resource another camera needs. Those four conditions, not a general
+claim of superiority, are what the fallback rests on.
+
+\textbf{On the estimator.} Record the inference path --- it is nearly free and is
+usually required for audit anyway --- and then report accuracy per path. Do not
+expect the batch number to improve, and do not build a stratified batch estimator
+on the strength of a matched-distribution evaluation, because under matched
+distributions there is nothing for it to correct (\S\ref{sec:why}). Revisit that
+conclusion only with evidence of genuine path-mix shift between calibration and
+production, which is the condition under which the slice-based literature predicts
+a gain.
+
+\textbf{On calibration.} Confidence-only estimation was the weakest method on all
+three pairs ($0.0105$--$0.0140$ absolute error against $0.0006$--$0.0085$ for the
+prior), and its error tracks our engines' calibration error
+(ECE $0.0127$--$0.0167$). Since average confidence is unbiased exactly when scores
+are calibrated, effort spent on calibration buys estimation accuracy directly, and
+is likely a better investment than a more elaborate estimator.
+
+\textbf{On sizing the calibration set.} Per-path estimates are only as good as the
+smaller stratum. Our loosest per-path figure is the object pair's secondary
+estimate, off by $0.043$, and the secondary stratum is the thin one. Size the
+calibration set per stratum rather than per batch.
+
 \section{Limitations}
 
 \begin{enumerate}
@@ -331,13 +506,32 @@ conditions under which it would.
 figures characterise the generator.
 \item Failure is injected at a fixed rate, independently per frame. Real primary
 failures are bursty and correlated with the conditions that also make frames
-hard, which would create the very shift that would make stratification win.
+hard, which would create the very shift that would make stratification win. The
+same assumption flatters retry throughout \S\ref{sec:regime}: independent failures
+mean each attempt is a fresh draw, so correlated or persistent failure moves
+$m^\star$ down and the regime boundary towards the fallback. We report the
+independent case because it is what the generator produces, and we expect it is
+the case least favourable to our own pipeline.
+\item $m^\star$ prices a gap but not a retry. Where a repeated call consumes a
+scarce decode slot, the correct comparison includes the displaced work, and
+Eq.~\ref{eq:mstar} understates the fallback's case.
 \item The determinism claim is about the secondary engine's output given a frame.
 It is not a claim that the two-tier system as a whole is deterministic; which path
 a frame takes depends on wall-clock timeouts.
 \item Single estate, single generator, three pairs. Nothing here is validated
 against operational footage.
 \end{enumerate}
+
+\section{Venue}
+
+We consider this a workshop paper and say so rather than leaving it to a reviewer.
+Neither the two-tier architecture (\S\ref{sec:related}) nor the estimator is new,
+and the paper's value is a pair of operating rules for practitioners plus a
+negative result reported with its baseline intact. Systems-and-machine-learning and
+ML-safety workshop tracks are the natural fit. A main-track submission would be
+asking a novelty-seeking committee to reward a paper whose finding is that two
+pieces of machinery were not worth building, and we would expect it to be rejected
+for the reason the paper itself gives.
 
 \section{Conclusion}
 
@@ -352,6 +546,17 @@ pipeline buys yield and cross-process determinism at a measured cost in
 accuracy-over-all relative to retry. We recommend that deployments record
 provenance, report accuracy per path, and stop expecting the batch number to
 improve.
+
+On the fallback the answer is a boundary rather than a verdict. Retry returns
+better records and the two-tier pipeline returns more of them, and which matters
+depends on one quantity a deployment can measure for itself: what a gap in the
+stream costs. On our three engine pairs that break-even runs from $71.5$ correct
+records per gap at a $5\%$ primary failure rate down to $0.11$ at $50\%$, crossing
+unity between failure rates of $0.2$ and $0.35$. Below that band a secondary engine
+is unbuilt work; above it, it is the system. Both of this paper's findings have the
+same shape, and it is the shape we would like the reader to take away: the simple
+option wins over most of the range, and the useful contribution is knowing where
+the range ends.
 
 \section*{Reproduction}
 

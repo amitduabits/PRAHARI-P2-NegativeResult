@@ -302,6 +302,161 @@
           "accuracy": 0.5829582958295829
         }
       ]
+    },
+    {
+      "experiment": "E2.5_operating_regime",
+      "rows": [
+        {
+          "pair": "objects",
+          "injected_fail_rate": 0.05,
+          "two_tier_accuracy": 0.6353,
+          "retry_accuracy_over_all": 0.6496,
+          "retry_yield": 0.9998,
+          "retry_accuracy_given_returned": 0.6497299459891978,
+          "accuracy_gap_to_retry": 0.01429999999999998,
+          "break_even_gap_cost": 71.50000000000777
+        },
+        {
+          "pair": "objects",
+          "injected_fail_rate": 0.1,
+          "two_tier_accuracy": 0.6354,
+          "retry_accuracy_over_all": 0.6508,
+          "retry_yield": 0.9984,
+          "retry_accuracy_given_returned": 0.6518429487179488,
+          "accuracy_gap_to_retry": 0.01540000000000008,
+          "break_even_gap_cost": 9.624999999999774
+        },
+        {
+          "pair": "objects",
+          "injected_fail_rate": 0.2,
+          "two_tier_accuracy": 0.6274,
+          "retry_accuracy_over_all": 0.645,
+          "retry_yield": 0.9898,
+          "retry_accuracy_given_returned": 0.6516467973327945,
+          "accuracy_gap_to_retry": 0.01760000000000006,
+          "break_even_gap_cost": 1.7254901960784395
+        },
+        {
+          "pair": "objects",
+          "injected_fail_rate": 0.35,
+          "two_tier_accuracy": 0.5897,
+          "retry_accuracy_over_all": 0.6214,
+          "retry_yield": 0.9633,
+          "retry_accuracy_given_returned": 0.6450742240215923,
+          "accuracy_gap_to_retry": 0.03169999999999995,
+          "break_even_gap_cost": 0.863760217983651
+        },
+        {
+          "pair": "objects",
+          "injected_fail_rate": 0.5,
+          "two_tier_accuracy": 0.5698,
+          "retry_accuracy_over_all": 0.5934,
+          "retry_yield": 0.9028,
+          "retry_accuracy_given_returned": 0.6572884359769606,
+          "accuracy_gap_to_retry": 0.023600000000000065,
+          "break_even_gap_cost": 0.2427983539094658
+        },
+        {
+          "pair": "faces",
+          "injected_fail_rate": 0.05,
+          "two_tier_accuracy": 0.6094,
+          "retry_accuracy_over_all": 0.6165,
+          "retry_yield": 0.9997,
+          "retry_accuracy_given_returned": 0.6166850055016505,
+          "accuracy_gap_to_retry": 0.007099999999999995,
+          "break_even_gap_cost": 23.666666666669258
+        },
+        {
+          "pair": "faces",
+          "injected_fail_rate": 0.1,
+          "two_tier_accuracy": 0.594,
+          "retry_accuracy_over_all": 0.6138,
+          "retry_yield": 0.9975,
+          "retry_accuracy_given_returned": 0.6153383458646616,
+          "accuracy_gap_to_retry": 0.01980000000000004,
+          "break_even_gap_cost": 7.920000000000185
+        },
+        {
+          "pair": "faces",
+          "injected_fail_rate": 0.2,
+          "two_tier_accuracy": 0.5832,
+          "retry_accuracy_over_all": 0.6237,
+          "retry_yield": 0.9908,
+          "retry_accuracy_given_returned": 0.6294913201453372,
+          "accuracy_gap_to_retry": 0.04049999999999998,
+          "break_even_gap_cost": 4.402173913043483
+        },
+        {
+          "pair": "faces",
+          "injected_fail_rate": 0.35,
+          "two_tier_accuracy": 0.5526,
+          "retry_accuracy_over_all": 0.6012,
+          "retry_yield": 0.9605,
+          "retry_accuracy_given_returned": 0.6259239979177511,
+          "accuracy_gap_to_retry": 0.04859999999999998,
+          "break_even_gap_cost": 1.2303797468354432
+        },
+        {
+          "pair": "faces",
+          "injected_fail_rate": 0.5,
+          "two_tier_accuracy": 0.5248,
+          "retry_accuracy_over_all": 0.5695,
+          "retry_yield": 0.9012,
+          "retry_accuracy_given_returned": 0.6319351975144252,
+          "accuracy_gap_to_retry": 0.04469999999999996,
+          "break_even_gap_cost": 0.4524291497975705
+        },
+        {
+          "pair": "anpr",
+          "injected_fail_rate": 0.05,
+          "two_tier_accuracy": 0.6048,
+          "retry_accuracy_over_all": 0.6077,
+          "retry_yield": 0.9998,
+          "retry_accuracy_given_returned": 0.6078215643128626,
+          "accuracy_gap_to_retry": 0.0029000000000000137,
+          "break_even_gap_cost": 14.500000000001666
+        },
+        {
+          "pair": "anpr",
+          "injected_fail_rate": 0.1,
+          "two_tier_accuracy": 0.594,
+          "retry_accuracy_over_all": 0.604,
+          "retry_yield": 0.9983,
+          "retry_accuracy_given_returned": 0.6050285485325052,
+          "accuracy_gap_to_retry": 0.010000000000000009,
+          "break_even_gap_cost": 5.8823529411763555
+        },
+        {
+          "pair": "anpr",
+          "injected_fail_rate": 0.2,
+          "two_tier_accuracy": 0.5817,
+          "retry_accuracy_over_all": 0.6072,
+          "retry_yield": 0.9932,
+          "retry_accuracy_given_returned": 0.6113572291582763,
+          "accuracy_gap_to_retry": 0.025499999999999967,
+          "break_even_gap_cost": 3.7499999999999796
+        },
+        {
+          "pair": "anpr",
+          "injected_fail_rate": 0.35,
+          "two_tier_accuracy": 0.5533,
+          "retry_accuracy_over_all": 0.5819,
+          "retry_yield": 0.9599,
+          "retry_accuracy_given_returned": 0.606208980102094,
+          "accuracy_gap_to_retry": 0.02859999999999996,
+          "break_even_gap_cost": 0.7132169576059836
+        },
+        {
+          "pair": "anpr",
+          "injected_fail_rate": 0.5,
+          "two_tier_accuracy": 0.5383,
+          "retry_accuracy_over_all": 0.5499,
+          "retry_yield": 0.8984,
+          "retry_accuracy_given_returned": 0.6120881567230633,
+          "accuracy_gap_to_retry": 0.011600000000000055,
+          "break_even_gap_cost": 0.11417322834645721
+        }
+      ]
     }
   ]
 }
